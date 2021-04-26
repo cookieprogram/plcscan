@@ -9,11 +9,19 @@ Copyright (c) 2012 Dmitry Efanov (Positive Research)
 __author__ = 'defanov'
 import modbus
 import s7
+import enip
 
 import sys
 from optparse import OptionParser
 import socket
 import struct
+
+import sys
+sys.path.append('..')
+
+from pylogix import PLC
+
+PLC_id_file = open("PLC_IDs.txt", 'w')
 
 def status(msg):
     sys.stderr.write(msg[:-1][:39].ljust(39,' ')+msg[-1:])
@@ -36,7 +44,7 @@ def scan(argv):
         """
     )
     parser.add_option("--hosts-list", dest="hosts_file", help="Scan hosts from FILE", metavar="FILE")
-    parser.add_option("--ports", dest="ports", help="Scan ports from PORTS", metavar="PORTS", default="102,502")
+    parser.add_option("--ports", dest="ports", help="Scan ports from PORTS", metavar="PORTS", default="102,502,44818")
     parser.add_option("--timeout", dest="connect_timeout", help="Connection timeout (seconds)", metavar="TIMEOUT", type="float", default=1)
 
     modbus.AddOptions(parser)
@@ -84,9 +92,10 @@ def scan(argv):
                 res = s7.Scan(host, port, options)
             elif port == 502:
                 res = modbus.Scan(host, port, options)
+            elif port == 44818:
+                res = enip.Scan(host)
             else:
-                res = modbus.Scan(host, port, options) or s7.Scan(host, port, options)
-
+                res = modbus.Scan(host, port, options) or s7.Scan(host, port, options) or enip.Scan(host)
             if not res:
                 print "%s:%d unknown protocol" % (host, port)
 
